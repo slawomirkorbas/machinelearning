@@ -4,8 +4,6 @@ import com.ml.tictactoe.model.Field
 import com.ml.tictactoe.model.GameResult
 import com.ml.tictactoe.model.GameState
 import spock.lang.Specification
-import spock.lang.Unroll
-
 import java.util.stream.Collectors
 import java.util.stream.Stream
 
@@ -47,7 +45,7 @@ class EngineSpec extends Specification
     }
 
 
-    def 'findBestFieldForTheNextMove: returns the field having highest WD2L ratio in trained model'()
+    def 'findBestFieldForTheNextMove: returns the field having highest effectiveness ratio in trained model'()
     {
         given:
             Engine engine = new Engine(new HashMap<>())
@@ -55,12 +53,12 @@ class EngineSpec extends Specification
             Field[][] matrix = new Field[3][3]
             matrix[0][0] = new Field(0,0,"x")
             matrix[0][1] = new Field(0,1,"o")
-            matrix[0][2] = new Field(0, 2, " ", [1,2,3]) // 1/(1+2+3)*100 = 16%
+            matrix[0][2] = new Field(0, 2, " ", [1,2,3])
             matrix[1][0] = new Field(1,0,"x")
-            matrix[1][1] = new Field(1,1, " ", [4,1,8])  // 4/(4+1+8)*100 = 31%
+            matrix[1][1] = new Field(1,1, " ", [4,1,8])
             matrix[1][2] = new Field(1,2,"o")
-            matrix[2][0] = new Field(2, 0, " ", [2,4,2]) // 2/(2+4+2)*100 = 25%
-            matrix[2][1] = new Field(2, 1, " ", [4,2,2]) // 4/(4+2+2)*100 = 50% (highest)
+            matrix[2][0] = new Field(2, 0, " ", [2,4,2])
+            matrix[2][1] = new Field(2, 1, " ", [4,2,2])
             matrix[2][2] = new Field(2,3,"x")
 
             GameState gameState = new GameState(matrix)
@@ -68,8 +66,8 @@ class EngineSpec extends Specification
         when:
             Field field = engine.findBestFieldForTheNextMove(gameState)
         then:
-            field.getRow() == 2
-            field.getCol() == 1
+            field.getRow() == 0
+            field.getCol() == 2
     }
 
 
@@ -94,6 +92,11 @@ class EngineSpec extends Specification
             trainedModel.put(gm03.getKey(), gm03)
 
         and:
+            GameState finalGameState = new GameState([[" ", "x", " " ],
+                                                      [" ", "x", "o" ],
+                                                      [" ", "x", "o" ]], new Field(0,1,"x"))
+            finalGameState.setGameResult(GameResult.WIN)
+        and:
             List gameExecutionPath = [
                     new GameState([[" ", " ", " " ],
                                    [" ", " ", " " ],
@@ -110,17 +113,16 @@ class EngineSpec extends Specification
                     new GameState([[" ", " ", " " ],
                                    [" ", "x", "o" ],
                                    [" ", "x", "o" ]]),
-                    new GameState([[" ", "x", " " ],
-                                   [" ", "x", "o" ],
-                                   [" ", "x", "o" ]], new Field(0,1,"x"))
+                    finalGameState
+
             ]
 
         when:
-            engine.updateTrainedModel(GameResult.WIN, gameExecutionPath)
+            engine.updateTrainedModel(finalGameState, gameExecutionPath)
         then:
-            trainedModel.get(gameExecutionPath.get(0).getKey()).getMatrix()[1][1].effectiveness() == 50
-            trainedModel.get(gameExecutionPath.get(2).getKey()).getMatrix()[2][1].effectiveness() == 50
-            trainedModel.get(gameExecutionPath.get(4).getKey()).getMatrix()[0][1].effectiveness() == 50
+            trainedModel.get(gameExecutionPath.get(0).getKey()).getMatrix()[1][1].effectiveness() == 2.8
+            trainedModel.get(gameExecutionPath.get(2).getKey()).getMatrix()[2][1].effectiveness() == 2.8
+            trainedModel.get(gameExecutionPath.get(4).getKey()).getMatrix()[0][1].effectiveness() == 2.8
 
     }
 

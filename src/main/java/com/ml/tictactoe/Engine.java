@@ -147,10 +147,11 @@ public class Engine
             final Field maxRatioField = freeFieldList.stream().max(Comparator.comparing(Field::effectiveness)).get();
 
             // filter again fields having maxRatio (there may me more having same ratio)
-            final List<Field> bestFields = freeFieldList.stream().filter(f -> f.effectiveness() == maxRatioField.effectiveness()).collect(Collectors.toList());
+            //final List<Field> bestFields = freeFieldList.stream().filter(f -> f.effectiveness() == maxRatioField.effectiveness()).collect(Collectors.toList());
 
             // pick randomly element from the "best" field list
-            suggestedMove = bestFields.get((new Random()).nextInt(bestFields.size()));
+            //suggestedMove = bestFields.get((new Random()).nextInt(bestFields.size()));
+            suggestedMove = maxRatioField;
         }
         return suggestedMove;
     }

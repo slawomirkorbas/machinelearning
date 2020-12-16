@@ -38,6 +38,9 @@ public class Field implements Serializable
         this.row = row;
         this.col = col;
         this.value = value;
+        this.winF  = wdl.get(0);
+        this.drawF = wdl.get(1);
+        this.lossF = wdl.get(2);
     }
 
     public boolean isFree()
