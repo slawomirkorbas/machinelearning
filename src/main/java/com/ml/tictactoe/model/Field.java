@@ -19,7 +19,6 @@ public class Field implements Serializable
     Integer row  = null;
     Integer col  = null;
     String value = null;
-    boolean inline = false;
 
     /** Effectiveness factors recalculated after each game played **/
     double lossF = 0;
@@ -75,6 +74,6 @@ public class Field implements Serializable
 
     public double effectiveness()
     {
-        return (1 + winF + drawF*0.5)/(1 + lossF);
+        return (1 + winF + drawF*0.7)/(1 + lossF);
     }
 }

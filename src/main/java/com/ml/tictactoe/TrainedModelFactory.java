@@ -1,10 +1,13 @@
 package com.ml.tictactoe;
 
 import com.ml.tictactoe.model.GameState;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
@@ -42,41 +45,35 @@ public class TrainedModelFactory
     /**
      * Serializes game model to file
      * @param trainedModel
-     * @param fileName
      */
-    public boolean serializeModel(final Map<String, GameState> trainedModel, final String fileName)
+    public ByteArrayOutputStream serializeModel(final Map<String, GameState> trainedModel)
     {
         try
         {
-            FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
             objectOutputStream.writeObject(trainedModel);
             objectOutputStream.flush();
             objectOutputStream.close();
-            return true;
+            return byteArrayOutputStream;
         }
         catch(IOException e)
         {
-            return false;
+            return null;
         }
 
     }
 
     /**
-     * Deserializes model from file
+     * Deserializes model from file name
      * @param fileName
      * @return
      */
     public Map<String, GameState> deserializeModel(final String fileName)
     {
-        FileInputStream fileInputStream = null;
         try
         {
-            fileInputStream = new FileInputStream(fileName);
-            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-            Map<String, GameState> model = (Map<String, GameState>) objectInputStream.readObject();
-            objectInputStream.close();
-            return model;
+            return readFromFileStream(new FileInputStream(fileName));
         }
         catch(IOException | ClassNotFoundException e)
         {
@@ -84,4 +81,34 @@ public class TrainedModelFactory
         }
     }
 
+    /**
+     * Reads game model from file object
+     * @param file
+     * @return map representing game model
+     */
+    public Map<String, GameState> readModelFromFile(final MultipartFile file)
+    {
+        try
+        {
+            return readFromFileStream(file.getInputStream());
+        }
+        catch(IOException | ClassNotFoundException e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Deserializes file content from input stream.
+     * @param inputStream
+     * @return
+     */
+    public Map<String, GameState> readFromFileStream(final InputStream inputStream) throws IOException, ClassNotFoundException
+    {
+        ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+        Map<String, GameState> model = (Map<String, GameState>) objectInputStream.readObject();
+        objectInputStream.close();
+        return model;
+    }
 }

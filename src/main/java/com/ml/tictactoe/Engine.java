@@ -62,19 +62,27 @@ public class Engine
         return gameState;
     }
 
+    Integer lastMoveRow = null;
+    Integer lastMoveCol = null;
+
     /**
      * This method should be called in "learning mode".
      * @param gameState - game state returned by the opponent
      * @param computerFigure - figure that should be used by the machine 'x' or 'o'
      * @return updated GameState with the computer's move
      */
-    public GameState doMoveAndUpdateModel(GameState gameState, String computerFigure) throws FieldCannotBeSetException
+    public GameState doMoveAndUpdateModel(GameState gameState, String computerFigure, int usersRow, int userCol) throws FieldCannotBeSetException
     {
         if(gameState.isNewGame(computerFigure))
         {
             gameExecutionPath.clear(); //game just started so clear current game execution path
+            lastMoveRow = null;
+            lastMoveCol = null;
         }
-
+        if( gameState.getFieldsOccupied() > 0 ) {
+            lastMoveRow = usersRow;
+            lastMoveCol = userCol;
+        }
         gameExecutionPath.add(new GameState(gameState.getMatrix())); //add game state to execution path
 
         GameState currentGameState = gameState;
@@ -85,7 +93,11 @@ public class Engine
 
             //find the "best" move(field) and adds to the game...
             currentGameState = new GameState(gameState.getMatrix());
-            currentGameState.addNextMove(findBestFieldForTheNextMove(trainedGameState), computerFigure);
+            Field nextMove = findBestFieldForTheNextMove(trainedGameState);
+            currentGameState.addNextMove(nextMove, computerFigure);
+
+            lastMoveRow = nextMove.getRow();
+            lastMoveCol = nextMove.getCol();
 
             // after the move has been done record NEW game state to execution path history
             gameExecutionPath.add(currentGameState);
@@ -93,23 +105,23 @@ public class Engine
 
         if(currentGameState.isOver(computerFigure))
         {
-            updateTrainedModel(currentGameState, gameExecutionPath);
+            updateTrainedModel(currentGameState, gameExecutionPath, lastMoveRow, lastMoveCol);
         }
 
         return currentGameState;
     }
-
 
     /**
      * Train the model by updating W/D/L percentage factors
      * @param finalGameState
      * @param gameExecutionPath
      */
-    void updateTrainedModel(GameState finalGameState, final List<GameState> gameExecutionPath)
+    void updateTrainedModel(GameState finalGameState, final List<GameState> gameExecutionPath, Integer lastMoveRow, Integer lastMoveCol )
     {
         Field computerMovedTo = null;
         // iterate backward over game execution path and update W/D/L factors for moves that has been made
-        for(int i = gameExecutionPath.size() - 1; i >= 0; i--)
+        final int gameSize = gameExecutionPath.size();
+        for(int i = gameSize - 1; i >= 0; i--)
         {
             GameState executedState = gameExecutionPath.get(i);
             if(executedState.getComputerMove() != null)
@@ -121,11 +133,23 @@ public class Engine
             GameState trainedGameState = trainedModel.get(executedState.getKey());
             if(trainedGameState != null)
             {
-                //recalculate effectiveness factor for the field, where computer was about to make a next move...
+                //recalculate effectiveness factor for the field which computer used for the  next move...
                 int row = computerMovedTo.getRow();
                 int col = computerMovedTo.getCol();
                 int totalNumberOfMoves = (int)finalGameState.getFieldsOccupied();
                 trainedGameState.getMatrix()[row][col].recalculateEffectiveness(finalGameState.getGameResult(), totalNumberOfMoves);
+
+                //additionally update effectiveness factor for the field where last move has been made in case game was lost by the computer
+                //this is done for the "trained model state" just before game has been over (before the last move of the computer)
+                //if(finalGameState.getGameResult().equals((GameResult.LOSS)))
+                //{
+                //    if(trainedGameState.equals(gameExecutionPath.get(gameSize - 3)))
+                //    {
+                //        //The assumption is that this field should be blocked "in the next game, in the same situation" as it lead to failure.
+                //        //Because of the above the Engine increases "DRAW" factor for given field.
+                //        trainedGameState.getMatrix()[lastMoveRow][lastMoveCol].recalculateEffectiveness(GameResult.DRAW, totalNumberOfMoves);
+                //    }
+                //}
             }
         }
     }

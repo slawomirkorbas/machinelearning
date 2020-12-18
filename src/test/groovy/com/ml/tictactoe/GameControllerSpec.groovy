@@ -7,6 +7,7 @@ import org.junit.Before
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.annotation.Rollback
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
@@ -51,5 +52,18 @@ class GameControllerSpec extends Specification
         then:
             result.andExpect(status().isOk())
                     //.andExpect(content().json("{matrix:...}}"))
+    }
+
+    def 'uploadTrainedModel: works as expected'()
+    {
+        given:
+            MockMultipartFile multipartFile = new MockMultipartFile("file",
+                    "model.gmf", "text/plain", "Some model data bytes...".getBytes())
+
+        expect:
+            mockMvc.perform(multipart("/tictactoe/loadModel").file(multipartFile))
+                    .andExpect(status().isFound())
+                    .andExpect(header().string("Location", "/"))
+
     }
 }

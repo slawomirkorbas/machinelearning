@@ -1,8 +1,6 @@
 package com.ml.tictactoe.model;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,8 +8,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
 
 /**
  * Class representing state of the game.
@@ -31,6 +27,9 @@ public class GameState implements Serializable
 
     /** Stores information about last computer move **/
     Field computerMove = null;
+
+    /** Last move in a game causing WIN, LOSS or DRAW **/
+    Field finishingMove = null;
 
     public GameState()
     {
@@ -149,6 +148,16 @@ public class GameState implements Serializable
     public long getFieldsOccupied()
     {
         return Arrays.stream(matrix).flatMap(f -> Stream.of(f)).filter(Field::isOccupied).count();
+    }
+
+    /**
+     * Returns first occupied field within the board
+     * @return
+     */
+    public Field getFirstOccupiedField()
+    {
+        List<Field> occupiedFields = Arrays.stream(matrix).flatMap(f -> Stream.of(f)).filter(Field::isOccupied).collect(Collectors.toList());
+        return occupiedFields.size() > 0 ? occupiedFields.get(0) : null;
     }
 
     /**
