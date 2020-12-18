@@ -266,6 +266,59 @@ public class GameState implements Serializable
     }
 
     /**
+     * Creates new game state (matrix) which is a transposition of this game state
+     * Rows in source matrix become columns in output matrix
+     * Columns in source matrix become rows in output matrix
+     * @return transpositioned matrix
+     */
+    public GameState createTransposition()
+    {
+        Field transposedComputerMove = null;
+        final Field[][] transposedMatrix = new Field[matrix.length][matrix.length];
+        for(int i=0;i<matrix.length;i++){
+            for(int j=0;j<matrix.length;j++){
+                transposedMatrix[i][j] = new Field(j, i , matrix[j][i].value);
+
+                // find the move marked as made by the computer and also transpose it
+                if(computerMove != null && computerMove.getRow() == j && computerMove.getCol() == i)
+                {
+                    transposedComputerMove = new Field(j, i, computerMove.getValue());
+                }
+            }
+        }
+        GameState transposedGameState = new GameState(transposedMatrix);
+        transposedGameState.setComputerMove(transposedComputerMove);
+        return transposedGameState;
+    }
+
+    /**
+     * Creates mirror of the matrix
+     * @return
+     */
+    public GameState createMirror()
+    {
+        Field mirroredComputerMove = null;
+        final Field[][] mirroredMatrix = new Field[matrix.length][matrix.length];
+        for(int i=0;i<matrix.length;i++) {
+            int imageColumn = 0;
+            for(int j=(matrix.length-1); j>=0; j--) {
+                mirroredMatrix[i][imageColumn] = new Field(i, j, matrix[i][j].value);
+
+                // find the move marked as made by the computer and also mirror it
+                if(computerMove != null && computerMove.getRow() == i && computerMove.getCol() == j)
+                {
+                    mirroredComputerMove = new Field(i, imageColumn, computerMove.getValue());
+                }
+                imageColumn++;
+            }
+        }
+        GameState mirrorGameState = new GameState(mirroredMatrix);
+        mirrorGameState.setComputerMove(mirroredComputerMove);
+        return mirrorGameState;
+    }
+
+
+    /**
      * Format gameState efficiency board with percentage values of field effectiveness concerning potential next move.
      * @return
      */

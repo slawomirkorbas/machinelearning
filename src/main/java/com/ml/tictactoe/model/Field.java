@@ -21,9 +21,9 @@ public class Field implements Serializable
     String value = null;
 
     /** Effectiveness factors recalculated after each game played **/
-    double lossF = 0;
-    double drawF = 0;
-    double winF  = 0;
+    double lossF = 1.00;
+    double drawF = 1.00;
+    double winF  = 1.00;
 
     public Field(Integer row, Integer col, String value)
     {
@@ -37,9 +37,9 @@ public class Field implements Serializable
         this.row = row;
         this.col = col;
         this.value = value;
-        this.winF  = wdl.get(0);
-        this.drawF = wdl.get(1);
-        this.lossF = wdl.get(2);
+        this.winF  = (double)wdl.get(0);
+        this.drawF = (double)wdl.get(1);
+        this.lossF = (double)wdl.get(2);
     }
 
     public boolean isFree()
@@ -56,7 +56,7 @@ public class Field implements Serializable
     public void recalculateEffectiveness(GameResult result, final int totalMoves)
     {
         final int maxMoves = 9;
-        final double factorValue = ((double)maxMoves/(double)totalMoves);
+        final double factorValue = 1; //((double)maxMoves/(double)totalMoves);
         switch(result)
         {
             case WIN:
@@ -74,6 +74,6 @@ public class Field implements Serializable
 
     public double effectiveness()
     {
-        return (1 + winF + drawF*0.7)/(1 + lossF);
+        return  (winF + drawF)/(winF + drawF + lossF) * 100;
     }
 }

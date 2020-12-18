@@ -94,4 +94,38 @@ class GameStateSpec extends Specification
             [["x", "o", " " ], ["x", "o", " " ], [" ", "o", " " ]]  | "x"            | false
             [["x", "o", " " ], ["o", "x", " " ], [" ", "o", "x" ]]  | "x"            | false
     }
+
+
+    def 'createTransposition: works as expected'()
+    {
+        given:
+            GameState gameState = new GameState(inputMatrix)
+
+        when:
+            GameState transposedGameState = gameState.createTransposition()
+        then:
+            transposedGameState.equals(new GameState(transposedMatrix))
+
+        where:
+            inputMatrix                                            |  transposedMatrix
+            [["x", "x", "x" ],[ " ", " ", " " ],[ " ", " ", " " ]] |  [["x", " ", " " ],[ "x", " ", " " ],[ "x", " ", " " ]]
+
+    }
+
+    def 'createtMirror: works as expected'()
+    {
+        given:
+            GameState gameState = new GameState(inputMatrix)
+
+        when:
+            GameState mirroredGameState = gameState.createMirror()
+        then:
+            mirroredGameState.equals(new GameState(mirroredMatrix))
+
+        where:
+            inputMatrix                                             |  mirroredMatrix
+            [["o", "x", "x" ],[ " ", " ", "x" ], [ " ", " ", "o" ]] | [["x", "x", "o" ], [ "x", " ", " " ],[ "o", " ", " " ]]
+
+
+    }
 }

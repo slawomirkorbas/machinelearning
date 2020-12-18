@@ -2,7 +2,6 @@ package com.ml.tictactoe;
 
 import com.ml.tictactoe.model.Field;
 import com.ml.tictactoe.model.FieldCannotBeSetException;
-import com.ml.tictactoe.model.GameResult;
 import com.ml.tictactoe.model.GameState;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +11,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,6 +36,9 @@ public class Engine
      *  when the game is finished. This is kind of one game history record.
      */
     List<GameState> gameExecutionPath = new ArrayList<>();
+    List<GameState> mirrorGameExecutionPath = new ArrayList<>();
+    List<GameState> transposedGameExecutionPath = new ArrayList<>();
+    List<GameState> transposedMirrorGameExecutionPath = new ArrayList<>();
 
     /**
      * Default constructor
@@ -62,8 +63,29 @@ public class Engine
         return gameState;
     }
 
-    Integer lastMoveRow = null;
-    Integer lastMoveCol = null;
+    /**
+     *
+     * @param gameState
+     * @param computerFigure
+     * @param usersRow
+     * @param userCol
+     * @return
+     * @throws FieldCannotBeSetException
+     */
+    public GameState doMoveAndUpdateModForParallelGames(GameState gameState, String computerFigure, int usersRow, int userCol) throws FieldCannotBeSetException
+    {
+        GameState mirrorGameState = gameState.createMirror();
+        GameState transposedGameState = gameState.createTransposition();
+        GameState transposedMirrorGameState = transposedGameState.createMirror();
+
+        doMoveAndUpdateModel(mirrorGameState, mirrorGameExecutionPath, computerFigure, usersRow, userCol);
+        doMoveAndUpdateModel(transposedGameState, transposedGameExecutionPath, computerFigure, usersRow, userCol);
+        doMoveAndUpdateModel(transposedMirrorGameState, transposedMirrorGameExecutionPath, computerFigure, usersRow, userCol);
+
+        return doMoveAndUpdateModel(gameState, gameExecutionPath, computerFigure, usersRow, userCol);
+
+    }
+
 
     /**
      * This method should be called in "learning mode".
@@ -71,19 +93,14 @@ public class Engine
      * @param computerFigure - figure that should be used by the machine 'x' or 'o'
      * @return updated GameState with the computer's move
      */
-    public GameState doMoveAndUpdateModel(GameState gameState, String computerFigure, int usersRow, int userCol) throws FieldCannotBeSetException
+    public GameState doMoveAndUpdateModel(GameState gameState, final List<GameState> executionPath, String computerFigure, int usersRow, int userCol) throws FieldCannotBeSetException
     {
         if(gameState.isNewGame(computerFigure))
         {
-            gameExecutionPath.clear(); //game just started so clear current game execution path
-            lastMoveRow = null;
-            lastMoveCol = null;
+            executionPath.clear(); //game just started so clear current game execution path
         }
-        if( gameState.getFieldsOccupied() > 0 ) {
-            lastMoveRow = usersRow;
-            lastMoveCol = userCol;
-        }
-        gameExecutionPath.add(new GameState(gameState.getMatrix())); //add game state to execution path
+
+        executionPath.add(new GameState(gameState.getMatrix())); //add game state to execution path
 
         GameState currentGameState = gameState;
         if(!currentGameState.isOver(computerFigure))
@@ -96,27 +113,25 @@ public class Engine
             Field nextMove = findBestFieldForTheNextMove(trainedGameState);
             currentGameState.addNextMove(nextMove, computerFigure);
 
-            lastMoveRow = nextMove.getRow();
-            lastMoveCol = nextMove.getCol();
-
             // after the move has been done record NEW game state to execution path history
-            gameExecutionPath.add(currentGameState);
+            executionPath.add(currentGameState);
         }
 
         if(currentGameState.isOver(computerFigure))
         {
-            updateTrainedModel(currentGameState, gameExecutionPath, lastMoveRow, lastMoveCol);
+            updateTrainedModel(currentGameState, executionPath);
         }
 
         return currentGameState;
     }
+
 
     /**
      * Train the model by updating W/D/L percentage factors
      * @param finalGameState
      * @param gameExecutionPath
      */
-    void updateTrainedModel(GameState finalGameState, final List<GameState> gameExecutionPath, Integer lastMoveRow, Integer lastMoveCol )
+    void updateTrainedModel(GameState finalGameState, final List<GameState> gameExecutionPath)
     {
         Field computerMovedTo = null;
         // iterate backward over game execution path and update W/D/L factors for moves that has been made
@@ -136,20 +151,8 @@ public class Engine
                 //recalculate effectiveness factor for the field which computer used for the  next move...
                 int row = computerMovedTo.getRow();
                 int col = computerMovedTo.getCol();
-                int totalNumberOfMoves = (int)finalGameState.getFieldsOccupied();
+                int totalNumberOfMoves = (int) finalGameState.getFieldsOccupied();
                 trainedGameState.getMatrix()[row][col].recalculateEffectiveness(finalGameState.getGameResult(), totalNumberOfMoves);
-
-                //additionally update effectiveness factor for the field where last move has been made in case game was lost by the computer
-                //this is done for the "trained model state" just before game has been over (before the last move of the computer)
-                //if(finalGameState.getGameResult().equals((GameResult.LOSS)))
-                //{
-                //    if(trainedGameState.equals(gameExecutionPath.get(gameSize - 3)))
-                //    {
-                //        //The assumption is that this field should be blocked "in the next game, in the same situation" as it lead to failure.
-                //        //Because of the above the Engine increases "DRAW" factor for given field.
-                //        trainedGameState.getMatrix()[lastMoveRow][lastMoveCol].recalculateEffectiveness(GameResult.DRAW, totalNumberOfMoves);
-                //    }
-                //}
             }
         }
     }

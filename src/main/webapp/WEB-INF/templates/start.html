@@ -115,9 +115,10 @@
             {
                 gameState.matrix[parseInt(cords[0])][parseInt(cords[1])].value = userFigure;
                 updateBoard(gameState);
-                sendGameState(gameState, userFigure, cords[0], cords[1], function (newGameState) {
-                    gameState = newGameState;
+                sendGameState(gameState, userFigure, cords[0], cords[1], function (gameInfoDto) {
+                    gameState = gameInfoDto.gameState;
                     updateBoard(gameState);
+                    console.log("ModelSize = " + gameInfoDto.modelSize);
                     //console.log("New game state is: " + JSON.stringify(gameState));
                     if (gameState.gameResult != null) {
                         console.log("Game is over. Computer " + gameState.gameResult + " !");
@@ -150,7 +151,7 @@
             $("#2_2").html(gameState.matrix[2][2].value);
 
             if(gameState.gameResult != null) {
-
+                //TODO mark inline figures with different colour
             }
 
         }
