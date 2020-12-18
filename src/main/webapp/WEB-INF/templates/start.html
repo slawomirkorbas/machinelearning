@@ -8,21 +8,21 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <title>Tic-Tac-Toe</title>
         <style type="text/css">
+            div { margin: 5px;}
             table{ table-layout:fixed; }
-            td {
+            td.tttField {
                 width:70px;
                 height:70px;
                 max-width:150px;
                 max-height:150px;
                 min-width:50px;
                 min-height:50px;
-                border: 2px solid darkgray;
                 text-align: center;
                 font-family: "Arial";
                 font-size: 36px;
                 cursor: pointer;
             }
-            td:hover {
+            td.tttField:hover {
                 background-color: Aquamarine;
             }
         </style>
@@ -35,57 +35,65 @@
     </head>
 <body>
     <div class="container">
-        <h1>Tic-Tac-Toe</h1>
-        <p>Self learning engine...</p>
+        <h1>Tic-Tac-Toe - machine learning test</h1>
 
         <div class="row">
-            <div class="col">
+            <div class="col-3">
+                <table>
+                    <tr>
+                        <td class="tttField border border-0" id="0_0"></td>
+                        <td class="tttField border border-top-0" id="0_1"></td>
+                        <td class="tttField border border-0" id="0_2"></td>
+                    </tr>
+                    <tr>
+                        <td class="tttField border border-left-0" id="1_0"></td>
+                        <td class="tttField border" id="1_1"></td>
+                        <td class="tttField border border-right-0" id="1_2"></td>
+                    </tr>
+                    <tr>
+                        <td class="tttField border border-0" id="2_0"></td>
+                        <td class="tttField border border-bottom-0" id="2_1"></td>
+                        <td class="tttField border border-0" id="2_2"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-4">
                 <div class="row">
-                    <!-- donloading trained model GMF file -->
-                    <a download href="/tictactoe/downloadModel">
-                        <button class="btn btn-primary" type="submit"><i class="fa fa-download"></i>Download trained model</button>
-                    </a>
-                </div>
-                <div class="row">
-                    <!-- Uploading/downloading model file section -->
-                    <form method="POST" enctype="multipart/form-data" action="/tictactoe/loadModel">
-                        <div class="form-group">
-                            <label for="modelFile">File containing game model (*.gmf)</label>
-                            <input type="file" class="form-control-file" id="modelFile" name="modelFile">
-                            <button class="btn btn-primary" type="submit">Upload model</button>
-                        </div>
-                    </form>
-                </div>
-                <div class="row">
-                    <button class="btn btn-primary" type="button" onclick="resetGame()">New game</button>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="exampleRadios" id="learnMode" value="learnMode" checked>
-                        <label class="form-check-label" for="learnMode">Learning mode</label>
+                    <div class="col">
+                        <button class="btn-sm btn-primary" type="button" onclick="resetGame()">New game</button>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="exampleRadios" id="playMode" value="playMode" >
-                        <label class="form-check-label" for="playMode">Normal play</label>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exampleRadios" id="learnMode" value="learnMode" checked>
+                            <label class="form-check-label" for="learnMode">Learning mode</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exampleRadios" id="playMode" value="playMode" >
+                            <label class="form-check-label" for="playMode">Normal play</label>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col">
-                <table>
-                    <tr>
-                        <td class="tttField" id="0_0"></td>
-                        <td class="tttField" id="0_1"></td>
-                        <td class="tttField" id="0_2"></td>
-                    </tr>
-                    <tr>
-                        <td class="tttField" id="1_0"></td>
-                        <td class="tttField" id="1_1"></td>
-                        <td class="tttField" id="1_2"></td>
-                    </tr>
-                    <tr>
-                        <td class="tttField" id="2_0"></td>
-                        <td class="tttField" id="2_1"></td>
-                        <td class="tttField" id="2_2"></td>
-                    </tr>
-                </table>
+        </div>
+        <div class="row">
+            <div class="col-5">
+                <!-- downloading trained model GMF file -->
+                <a download href="/tictactoe/downloadModel">
+                    <button class="btn-sm btn-primary" type="submit"><i class="fa fa-download"></i>&nbsp;Download model</button>
+                </a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-5">
+                <!-- uploading/downloading model file section -->
+                <form id="modelUploadForm" method="POST" enctype="multipart/form-data" action="/tictactoe/loadModel">
+                    <div class="row">
+                        <div class="col-4"><button class="btn-sm btn-primary" type="submit">Upload model</button></div>
+                        <div class="col-3"><input type="file" class="form-control-file" id="modelFile" name="modelFile"></div>
+                    </div>
+                </form>
             </div>
         </div>
         <!--Copyright-->
@@ -183,6 +191,23 @@
                 currentDate = Date.now();
             } while (currentDate - date < milliseconds);
         }
+
+        $("form#modelUploadForm").submit(function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: '/tictactoe/loadModel',
+                type: 'POST',
+                data: formData,
+                success: function (message) {
+                    alert(message)
+                },
+                cache: false,
+                contentType: false,
+                processData: false
+            });
+        });
 
         $( document ).ready(function() {
             resetGame();

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -82,30 +83,26 @@ public class GameController
     }
 
 
+
     @PostMapping("/tictactoe/loadModel")
-    String uploadTrainedModel(@RequestParam("modelFile") MultipartFile modelFile, RedirectAttributes redirectAttributes)
+    ResponseEntity<String> uploadTrainedModel(@RequestParam("modelFile") MultipartFile modelFile)
     {
         if(modelFile == null && modelFile.isEmpty())
         {
-            redirectAttributes.addFlashAttribute("message",
-                                                 "File is empty: " + modelFile.getOriginalFilename() + "!");
-            return "redirect:/";
+            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("File is empty: " + modelFile.getOriginalFilename() + "!");
         }
 
         Map loadedModel = trainedModelFactory.readModelFromFile(modelFile);
         if( loadedModel != null )
         {
             engine.setTrainedModel(loadedModel);
-            redirectAttributes.addFlashAttribute("message",
-                                                 "You successfully uploaded " + modelFile.getOriginalFilename() + "!");
+            return ResponseEntity.status(HttpStatus.OK).body("You successfully uploaded " + modelFile.getOriginalFilename() + "!");
         }
         else
         {
-            redirectAttributes.addFlashAttribute("message",
-                                                 "Error occurred when deserializing game model from file: " + modelFile.getOriginalFilename() + "!");
+            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("Error occurred when deserializing game model from file: " + modelFile.getOriginalFilename() + "!");
 
         }
-        return "redirect:/";
     }
 
 
